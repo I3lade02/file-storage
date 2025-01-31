@@ -14,7 +14,8 @@ function App() {
   const [fileTypeFilter, setFileTypeFilter] = useState("");
   const [renameFileName, setRenameFileName] = useState("");
   const [newFileName, setNewFileName] = useState("");
-  
+  const fileInputRef = React.createRef();
+
   // Load files on component mount
   useEffect(() => {
     fetch("http://localhost:5000/files")
@@ -48,7 +49,7 @@ function App() {
   // Handle file upload
   const handleFileUpload = () => {
     if (!file) {
-      setUploadMessage("Please select a file.");
+      setUploadMessage("❌ Prosím vyberte soubor před nahráním.");
       return;
     }
     const formData = new FormData();
@@ -59,11 +60,16 @@ function App() {
     })
       .then((response) => response.json())
       .then((data) => {
+        setUploadMessage("✅ Soubor úspěšně nahrán.");
         setUploadMessage(data.message);
         setFiles([...files, { name: file.name, type: file.type }]);
+        setFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""; //Resets input field
+        }
       })
       .catch(() => {
-        setUploadMessage("Error uploading file.");
+        setUploadMessage("❌ Chyba při nahrávání souboru.");
       });
   };
 
@@ -161,7 +167,7 @@ function App() {
           <Card className="p-4 shadow-lg rounded">
             <h4 className="text-center text-success">📤 Nahrát soubor</h4>
             <Form.Group controlId="formFile" className="mb-3">
-              <Form.Control type="file" onChange={handleFileChange} className="p-2" />
+              <Form.Control type="file" ref={fileInputRef} onChange={handleFileChange} className="p-2" />
             </Form.Group>
             <Button variant="success" className="w-100 p-2 fw-bold" onClick={handleFileUpload}>Nahrát soubor</Button>
             {uploadMessage && <Alert variant="info" className="mt-3">{uploadMessage}</Alert>}
