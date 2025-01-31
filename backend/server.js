@@ -123,7 +123,7 @@ app.post("/rename", (req, res) => {
             });
         }
 
-        res.json({ success: true, message: "Soubor úspěšně přejmenován." });
+        res.json({ success: true, message: "Soubor úspěšně přejmenován.", oldThumbnailName: oldName });
     });
 });
 

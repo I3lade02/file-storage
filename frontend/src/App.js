@@ -139,68 +139,88 @@ function App() {
 
   // Render dashboard if authenticated
   return (
-    <Container>
-      <Nav className="justify-content-between mt-4">
-        <div>
+    <Container className="p-4">
+      <Nav className="justify-content-between mb-4 p-3 shadow rounded bg-light">
+        <div className="d-flex">
           <Nav.Item>
-            <Nav.Link href="#">Upload File</Nav.Link>
+            <Nav.Link href="#" className="fw-bold text-dark">📂 Nahrát soubor</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link href="#">File List</Nav.Link>
+            <Nav.Link href="#" className="fw-bold text-dark">📁 Seznam souborů</Nav.Link> 
           </Nav.Item>
         </div>
         {isAuthenticated && (
-          <Button variant="danger" onClick={handleLogout}>Logout</Button>
+          <Button variant="outline-danger" onClick={handleLogout}>🚪 Odhlásit</Button>
         )}
       </Nav>
-      <h1 className="mt-4 text-center">File Storage Dashboard</h1>
-      <Row className="mt-4">
-        <Col md={6} className="text-center">
-          <Form.Group controlId="formFile" className="mb-3">
-            <Form.Label>Select File</Form.Label>
-            <Form.Control type="file" onChange={handleFileChange} />
-          </Form.Group>
-          <Button variant="success" className="w-75" onClick={handleFileUpload}>Upload File</Button>
-          {uploadMessage && <Alert variant="info" className="mt-3">{uploadMessage}</Alert>}
+
+      <h1 className="text-center mb-4 fw-bold text-primary">📦 Správce souborů</h1>
+
+      <Row className="gx-5">
+        <Col md={5}>
+          <Card className="p-4 shadow-lg rounded">
+            <h4 className="text-center text-success">📤 Nahrát soubor</h4>
+            <Form.Group controlId="formFile" className="mb-3">
+              <Form.Control type="file" onChange={handleFileChange} className="p-2" />
+            </Form.Group>
+            <Button variant="success" className="w-100 p-2 fw-bold" onClick={handleFileUpload}>Nahrát soubor</Button>
+            {uploadMessage && <Alert variant="info" className="mt-3">{uploadMessage}</Alert>}
+          </Card>
         </Col>
-        <Col md={6}>
-          <h4>File List</h4>
-          <Form.Control 
-            type="text" 
-            placeholder="Search file..." 
-            value={searchQuery} 
-            onChange={(e) => setSearchQuery(e.target.value)} 
-            className="mb-3"
-          />
-          <Form.Select 
-            className="mb-3" 
-            value={fileTypeFilter} 
-            onChange={(e) => setFileTypeFilter(e.target.value)}
-          >
-            <option value="">All Types</option>
-            <option value="image/">Images</option>
-            <option value="video/">Videos</option>
-            <option value="application/pdf">PDFs</option>
-          </Form.Select>
-          <ListGroup>
-            {filteredFiles.map((file, index) => (
-              <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                {file.type.startsWith("image/") && <Image src={`http://localhost:5000/thumbnails/${file.name}`} thumbnail width={50} height={50} />}
-                {file.name}
-                <div>
-                  <Button variant="primary" size="sm" className="me-1" href={`http://localhost:5000/download/${file.name}`} download>⬇</Button>
-                  <Button variant="primary" size="sm" className="me-1" onClick={() => setRenameFileName(file.name)}>✏</Button>
-                  <Button variant="primary" size="sm" className="me-1" onClick={() => handleFileDelete(file.name)}>❌</Button>
-                </div>
-                {renameFileName === file.name && (
-                  <InputGroup className="mt-2">
-                    <Form.Control placeholder="New Name" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
-                    <Button variant="success" size="sm" onClick={() => handleFileRename(file.name)}>✔</Button>
-                  </InputGroup>
-                )}
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
+
+        <Col md={7}>
+          <Card className="p-4 shadow-lg rounded">
+            <h4 className="text-center text-primary">📁 Seznam souborů</h4>
+            <Form.Control
+              type="text"
+              placeholder="🔍 Vyhledat soubor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mb-3 p-2"
+            />
+            <Form.Select
+              className="mb-3 p-2"
+              value={fileTypeFilter}
+              onChange={(e) => setFileTypeFilter(e.target.value)}
+            >
+              <option value="">📌 Všechny typy</option>
+              <option value="image/">🖼️ Obrázky</option>
+              <option value="video/">🎥 Videa</option>
+              <option value="application/pdf">📄 PDF</option>
+            </Form.Select>
+            <ListGroup className="shadow-sm rounded">
+              {filteredFiles.map((file, index) => (
+                <ListGroup.Item
+                  key={index}
+                  className="d-flex justify-content-between align-items-center p-3 shadow-sm mb-2 rounded"
+                >
+                  <div className="d-flex align-items-center">
+                    {file.type.startsWith("image/") && (
+                      <Image src={`http://localhost:5000/thumbnails/${file.name}`} thumbnail width={50} height={50} className="me-3 rounded"/>
+                    )}
+                    <span className="fw-bold">{file.name}</span>
+                  </div>
+                  <div className="d-flex">
+                    <Button variant="outline-primary" size="sm" className="me-1" href={`http://localhost:5000/download/${file.name}`} download>
+                      ⬇
+                    </Button>
+                    <Button variant="outline-warning" size="sm" className="me-1" onClick={() => setRenameFileName(file.name)}>
+                      ✏
+                    </Button>
+                    <Button variant="outline-danger" size="sm" className="me-1" onClick={() => handleFileDelete(file.name)}>
+                      ❌
+                    </Button>
+                  </div>
+                  {renameFileName === file.name && (
+                    <InputGroup className="mt-2">
+                      <Form.Control placeholder="Nový název" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+                      <Button variant="success" size="sm" onClick={() => handleFileRename(file.name)}>✔</Button>
+                    </InputGroup>
+                  )}
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          </Card>
         </Col>
       </Row>
     </Container>
