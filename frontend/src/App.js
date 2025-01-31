@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import './App.css';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Container, Form, Button, Card, Nav, Row, Col, Alert, ListGroup, Image, InputGroup } from "react-bootstrap";
 
@@ -14,7 +15,10 @@ function App() {
   const [fileTypeFilter, setFileTypeFilter] = useState("");
   const [renameFileName, setRenameFileName] = useState("");
   const [newFileName, setNewFileName] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true'); 
   const fileInputRef = React.createRef();
+  const dropRef = useRef();
 
   // Load files on component mount
   useEffect(() => {
@@ -31,7 +35,7 @@ function App() {
       setIsAuthenticated(true);
       setErrorMessage("");
     } else {
-      setErrorMessage("Incorrect password! Please try again.");
+      setErrorMessage("Špatné heslo! Zkus to znovu.");
     }
   };
 
@@ -62,7 +66,7 @@ function App() {
       .then((data) => {
         setUploadMessage("✅ Soubor úspěšně nahrán.");
         setUploadMessage(data.message);
-        setFiles([...files, { name: file.name, type: file.type }]);
+        setFiles([...files, { name: file.name, type: file.type, size: file.size }]);
         setFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = ""; //Resets input field
@@ -116,6 +120,45 @@ function App() {
       });
   };
 
+  
+  //Handle dark mode
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    localStorage.setItem("darkMode", !darkMode);
+  };
+  
+  const handleDragOver = (e) => {
+  e.preventDefault();
+    dropRef.current.classList.add("drag-over");
+  }; 
+
+  const handleDragLeave = () => {
+    dropRef.current.classList.remove("drag-over");
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    dropRef.current.classList.remove("drag-over");
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      setFile(files[0]);
+    }
+  };
+
+
+  const toggleFileSelection = (fileName) => {
+    setSelectedFiles((prevSelected) => 
+      prevSelected.includes(fileName)
+      ? prevSelected.filter((name) => name !== fileName)
+      : [...prevSelected, fileName]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    selectedFiles.forEach((file) => handleFileDelete(file));
+    setSelectedFiles([]);
+  };
+
   // Render login form if not authenticated
   if (!isAuthenticated) {
     return (
@@ -145,7 +188,7 @@ function App() {
 
   // Render dashboard if authenticated
   return (
-    <Container className="p-4">
+    <Container className={`p-4 ${darkMode ? "dark-mode" : ""}`}>
       <Nav className="justify-content-between mb-4 p-3 shadow rounded bg-light">
         <div className="d-flex">
           <Nav.Item>
@@ -158,6 +201,9 @@ function App() {
         {isAuthenticated && (
           <Button variant="outline-danger" onClick={handleLogout}>🚪 Odhlásit</Button>
         )}
+        <Button variant="outline-secondary" onClick={toggleDarkMode}>
+          {darkMode ? "🌞 Světlý režim" : "🌙 Tmavý režim"}
+        </Button>
       </Nav>
 
       <h1 className="text-center mb-4 fw-bold text-primary">📦 Správce souborů</h1>
@@ -166,6 +212,15 @@ function App() {
         <Col md={5}>
           <Card className="p-4 shadow-lg rounded">
             <h4 className="text-center text-success">📤 Nahrát soubor</h4>
+            <div
+              ref={dropRef}
+              className="drop-zone"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave} 
+              onDrop={handleDrop}           
+            >
+              Přetáhněte soubor sem nebo ho vyberte
+            </div>
             <Form.Group controlId="formFile" className="mb-3">
               <Form.Control type="file" ref={fileInputRef} onChange={handleFileChange} className="p-2" />
             </Form.Group>
@@ -177,6 +232,17 @@ function App() {
         <Col md={7}>
           <Card className="p-4 shadow-lg rounded">
             <h4 className="text-center text-primary">📁 Seznam souborů</h4>
+            <Button variant="danger" className="mb-3" onClick={handleBulkDelete} disabled={selectedFiles.length === 0}>
+              🗑️ Smazat vybrané soubory
+            </Button>
+            <ListGroup>
+              {files.map((file) => (
+                <ListGroup.Item key={file.name} className="d-flex justify-content-between align-items-center">
+                  <Form.Check type="checkbox" onChange={() => toggleFileSelection(file.name)} />
+                    {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
             <Form.Control
               type="text"
               placeholder="🔍 Vyhledat soubor..."

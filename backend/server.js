@@ -127,5 +127,24 @@ app.post("/rename", (req, res) => {
     });
 });
 
+//API for file size
+app.get("/files", (req, res) => {
+    fs.readdir(UPLOADS_DIR, (err, files) => {
+        if (err) return res.status(500).json({ message: "Chyba při načítání souborů."});
+
+        const fileList = files.map((file) => {
+            const filePath = path.join(UPLOADS_DIR, file);
+            const stats = fs.statSync(filePath);
+            return {
+                name: file,
+                type: path.extname(filePath),
+                size: stats.size,
+            };
+        });
+
+        res.json({ files: fileList });
+    });
+});
+
 // Server start
 app.listen(PORT, () => console.log(`Server běží na http://localhost:${PORT}`));
