@@ -3,7 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Container, Form, Button, Card, Nav, Row, Col, Alert, ListGroup, Image, InputGroup } from "react-bootstrap";
 
 function App() {
-  //hooks declare
+  // Hooks declaration
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -15,37 +15,40 @@ function App() {
   const [renameFileName, setRenameFileName] = useState("");
   const [newFileName, setNewFileName] = useState("");
   
-  //file loading
+  // Load files on component mount
   useEffect(() => {
     fetch("http://localhost:5000/files")
       .then((response) => response.json())
       .then((data) => setFiles(data.files))
-      .catch((error) => console.error("Chyba při načítání souborů", error));
+      .catch((error) => console.error("Error loading files", error));
   }, []);
 
-  //login handling 
+  // Handle login
   const handleLogin = (e) => {
     e.preventDefault();
     if (password === "admin123") {
       setIsAuthenticated(true);
       setErrorMessage("");
     } else {
-      setErrorMessage("Nesprávné heslo! Zkuste to znovu.");
+      setErrorMessage("Incorrect password! Please try again.");
     }
   };
 
+  // Handle logout
   const handleLogout = () => {
     setIsAuthenticated(false);
     setPassword("");
   };
 
+  // Handle file selection
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
+  // Handle file upload
   const handleFileUpload = () => {
     if (!file) {
-      setUploadMessage("Prosím vyberte soubor.");
+      setUploadMessage("Please select a file.");
       return;
     }
     const formData = new FormData();
@@ -60,10 +63,11 @@ function App() {
         setFiles([...files, { name: file.name, type: file.type }]);
       })
       .catch(() => {
-        setUploadMessage("Chyba při nahrávání souboru.");
+        setUploadMessage("Error uploading file.");
       });
   };
 
+  // Handle file delete
   const handleFileDelete = (fileName) => {
     fetch(`http://localhost:5000/delete/${fileName}`, {
       method: "DELETE",
@@ -73,7 +77,7 @@ function App() {
         setFiles(files.filter((file) => file.name !== fileName));
       })
       .catch(() => {
-        console.error("Chyba při mazání souboru");
+        console.error("Error deleting file");
       });
   };
 
@@ -82,6 +86,7 @@ function App() {
     (fileTypeFilter ? file.type.startsWith(fileTypeFilter) : true)
   );
 
+  // Handle file rename
   const handleFileRename = (fileName) => {
     if (!newFileName.trim()) return;
   
@@ -97,24 +102,24 @@ function App() {
           setRenameFileName("");
           setNewFileName("");
         } else {
-          alert("Chyba při přejmenování: " + data.message);
+          alert("Error renaming file: " + data.message);
         }
       })
       .catch(() => {
-        alert("Chyba při komunikaci se serverem.");
+        alert("Error communicating with the server.");
       });
   };
 
-  //login Form 
+  // Render login form if not authenticated
   if (!isAuthenticated) {
     return (
       <Container className="d-flex justify-content-center align-items-center vh-100">
         <Card style={{ width: "300px" }}>
           <Card.Body>
-            <h3 className="text-center">Přihlášení</h3>
+            <h3 className="text-center">Login</h3>
             <Form onSubmit={handleLogin}>
               <Form.Group className="mb-3">
-                <Form.Label>Heslo</Form.Label>
+                <Form.Label>Password</Form.Label>
                 <Form.Control
                   type="password"
                   value={password}
@@ -123,7 +128,7 @@ function App() {
               </Form.Group>
               {errorMessage && <Alert variant="danger" className="text-center">{errorMessage}</Alert>}
               <Button type="submit" variant="primary" className="w-100">
-                Přihlásit se
+                Login
               </Button>
             </Form>
           </Card.Body>
@@ -131,37 +136,38 @@ function App() {
       </Container>
     );
   }
-//dashboard
+
+  // Render dashboard if authenticated
   return (
     <Container>
       <Nav className="justify-content-between mt-4">
         <div>
           <Nav.Item>
-            <Nav.Link href="#">Nahrát soubor</Nav.Link>
+            <Nav.Link href="#">Upload File</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link href="#">Seznam souborů</Nav.Link>
+            <Nav.Link href="#">File List</Nav.Link>
           </Nav.Item>
         </div>
         {isAuthenticated && (
-          <Button variant="danger" onClick={handleLogout}>Odhlásit</Button>
+          <Button variant="danger" onClick={handleLogout}>Logout</Button>
         )}
       </Nav>
-      <h1 className="mt-4 text-center">Dashboard úložiště souborů</h1>
+      <h1 className="mt-4 text-center">File Storage Dashboard</h1>
       <Row className="mt-4">
         <Col md={6} className="text-center">
           <Form.Group controlId="formFile" className="mb-3">
-            <Form.Label>Vyberte soubor</Form.Label>
+            <Form.Label>Select File</Form.Label>
             <Form.Control type="file" onChange={handleFileChange} />
           </Form.Group>
-          <Button variant="success" className="w-75" onClick={handleFileUpload}>Nahrát soubor</Button>
+          <Button variant="success" className="w-75" onClick={handleFileUpload}>Upload File</Button>
           {uploadMessage && <Alert variant="info" className="mt-3">{uploadMessage}</Alert>}
         </Col>
         <Col md={6}>
-          <h4>Seznam souborů</h4>
+          <h4>File List</h4>
           <Form.Control 
             type="text" 
-            placeholder="Vyhledat soubor..." 
+            placeholder="Search file..." 
             value={searchQuery} 
             onChange={(e) => setSearchQuery(e.target.value)} 
             className="mb-3"
@@ -171,10 +177,10 @@ function App() {
             value={fileTypeFilter} 
             onChange={(e) => setFileTypeFilter(e.target.value)}
           >
-            <option value="">Všechny typy</option>
-            <option value="image/">Obrázky</option>
-            <option value="video/">Videa</option>
-            <option value="application/pdf">PDF</option>
+            <option value="">All Types</option>
+            <option value="image/">Images</option>
+            <option value="video/">Videos</option>
+            <option value="application/pdf">PDFs</option>
           </Form.Select>
           <ListGroup>
             {filteredFiles.map((file, index) => (
@@ -188,7 +194,7 @@ function App() {
                 </div>
                 {renameFileName === file.name && (
                   <InputGroup className="mt-2">
-                    <Form.Control placeholder="Nový název" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+                    <Form.Control placeholder="New Name" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
                     <Button variant="success" size="sm" onClick={() => handleFileRename(file.name)}>✔</Button>
                   </InputGroup>
                 )}
